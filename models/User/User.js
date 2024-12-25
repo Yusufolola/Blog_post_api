@@ -7,6 +7,9 @@ const userSchema = new mongoose.Schema({
     lastname: {type: String,
         required:[true, "please input lastname"],
     },
+    avatar:{
+        type: String,
+    },
     password: {type: String,
         required:[true, "please input password"],
     },
