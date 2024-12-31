@@ -1,45 +1,33 @@
 const express = require("express");
-
+const {getAllusers, getUserById, registerUser, loginUser, 
+    logoutUser, updateUser,
+    deleteUser,
+    changeRole} = require("../../controllers/userController")
 const router = express.Router();
+const protectRoute = require("../../middlewares/authMiddleware")
 
 // Get all users
-router.get('/', (req, res) => {
-    res.json({message: "hello"});
-});
+router.get('/',protectRoute, getAllusers);
 
 // Get a single user by ID
-router.get('/:userid', (req, res) => {
-    res.json({message: "hello single person"});
-});
+router.get('/:userid', protectRoute, getUserById);
 
 // Register a user
-router.post('/register', (req, res) => {
-    res.json({message: "hello you are registered"});
-});
+router.post('/register', registerUser);
 
 // Login a user
-router.post('/login', (req, res) => {
-    res.json({message: "hello you are logged in"});
-});
+router.post('/login', loginUser);
 
 // Logout a user
-router.post('/logout', (req, res) => {
-    res.json({message: "logout"});
-});
+router.post('/logout', protectRoute, logoutUser);
 
 // Update a user by ID
-router.put('/:userid', (req, res) => {
-    res.json({message: "updated"});
-});
+router.put('/:userid', protectRoute, updateUser);
 
 // Delete a user by ID
-router.delete('/:userid', (req, res) => {
-    res.json({message: "deleted"});
-});
+router.delete('/:userid',protectRoute, deleteUser);
 
 // Change a user's role by ID
-router.put('/:userid/role', (req, res) => {
-    res.json({message: "role changed"});
-});
+//router.put('/:userid/role', protectRoute, changeRole);
 
 module.exports = router;

@@ -1,10 +1,10 @@
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
-    firstname: {type: String,
+    firstName: {type: String,
         required:[true, "please input firstname"],
     },
-    lastname: {type: String,
+    lastName: {type: String,
         required:[true, "please input lastname"],
     },
     avatar:{
@@ -13,6 +13,7 @@ const userSchema = new mongoose.Schema({
     password: {type: String,
         required:[true, "please input password"],
     },
+    email: { type: String, required: true, unique: true },
     isBlocked:{
         type: Boolean,
         default: false,
