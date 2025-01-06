@@ -16,6 +16,10 @@ const postSchema = new mongoose.Schema({
         ref: "Category",
         required:[true, "choose a category"],
     },
+    comments:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref: "Comment",
+    },
     views:[{
         type:mongoose.Schema.Types.ObjectId,
         ref:"User",
@@ -42,5 +46,5 @@ const postSchema = new mongoose.Schema({
 })
 
 
-const Post = mongoose.model("Post", userSchema);
+const Post = mongoose.model("Post", postSchema);
 module.exports = Post;

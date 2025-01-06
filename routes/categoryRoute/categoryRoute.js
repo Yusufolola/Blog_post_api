@@ -1,25 +1,20 @@
 const express = require("express");
-const router = express.Router();
+const protectRoute = require("../../middlewares/authMiddleware");
+const categoryRouter = express.Router();
+
+const{ createCategory,getAllCategories,getSingleCategory,deleteCategory,} = require("../../controllers/categoryController")
+
 
 // Create a new category
-router.post('/', (req, res) => {
-    res.json({message: "create a new category"});
-});
+categoryRouter.post('/', protectRoute, createCategory);
 
 // Get all categories
-router.get('/', (req, res) => {
-    console.log("Categories route hit!");
-    res.json({message: "get all categories"});
-});
+categoryRouter.get('/', getAllCategories);
 
 // Get a specific category by ID
-router.get('/:categoryId', (req, res) => {
-    res.json({message: "get a specific category"});
-});
+categoryRouter.get('/:categoryId', getSingleCategory);
 
 // Delete a specific category by ID
-router.delete('/:categoryId', (req, res) => {
-    res.json({message: "delete a specific category"});
-});
+categoryRouter.delete('/:categoryId', protectRoute, deleteCategory);
 
-module.exports = router;
+module.exports = categoryRouter;
