@@ -4,12 +4,14 @@ const commentSchema = new mongoose.Schema({
     post: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Post",
-    },
-    user: {
-        type: Object,
         required: true,
     },
-    description:{
+    user: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+    },
+    content:{
         type: String,
         required: [true, 'please write your comments here'],
     },
