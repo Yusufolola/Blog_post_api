@@ -25,8 +25,8 @@ const createComment = async (req, res, next) => {
         post.comments.push(comment._id);
         commenter.comments.push(comment._id);
 
-        await post.save();
-        await commenter.save();
+        await post.save({validateBeforeSave:true});
+        await commenter.save({validateBeforeSave:true});
 
         res.json({
             status: "comment successfully created",
