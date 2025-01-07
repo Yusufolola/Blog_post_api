@@ -83,35 +83,44 @@ const registerUser = async (req, res, next) => {
 };
 
 //unprotected
+
 const loginUser = async (req, res, next) => {
     try {
         const {email, password} = req.body;
-        if(!email || !password){
-            return next(new HttpError("Please input all fields"), 422)
-        }
-        const newEmail = email.toLowerCase();
-        const user = await User.findOne({email: newEmail})
-        if(!user) {
-            return next(new HttpError("Invalid email or password", 422))
+        if (!email || !password) {
+            return next(new HttpError("Please input all fields", 422));
         }
 
-        const comparePassword = await bcrypt.compare(password, user.password)
-        if(!comparePassword) {
-            return next(new HttpError("Invalid email or password", 422))
+        const newEmail = email.toLowerCase();
+        const user = await User.findOne({email: newEmail});
+        if (!user) {
+            return next(new HttpError("Invalid email or password", 422));
         }
-        const {_id: id , name } = user;
-        const token = Jwt.sign({id, name}, process.env.JWT_KEY, {expiresIn: "1d" })
+
+        const comparePassword = await bcrypt.compare(password, user.password);
+        if (!comparePassword) {
+            return next(new HttpError("Invalid email or password", 422));
+        }
+
+        // Add a dynamic issued at (iat) field to make the token unique
+        const {_id: id, name} = user;
+        const token = Jwt.sign(
+            { id, name, iat: Math.floor(Date.now() / 1000) }, // Include the current timestamp as "iat"
+            process.env.JWT_KEY,
+            { expiresIn: "1d" }
+        );
+
         res.cookie('token', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            maxAge: 24 * 60 * 60 * 1000
-        }).status(200).json({ message: 'Login successful', name, id });
+            maxAge: 24 * 60 * 60 * 1000 // 1 day
+        }).status(200).json({ message: 'Login successful', name, id, token });
     } catch (error) {
         console.error(error);
-        return next(new HttpError("login failed, please verify credentials", 422))
-        
+        return next(new HttpError("Login failed, please verify credentials", 422));
     }
-}
+};
+
 
 const logoutUser = (req, res, next) => {
     try {
@@ -129,13 +138,16 @@ const logoutUser = (req, res, next) => {
 // protected to prevent unauthorized users from making changes.
 const updateUser = async (req, res, next) => {
     try {
-        const { currentPassword, newPassword, confirmNewPassword} = req.body;
-        if(!name || !email || !currentPassword || !newPassword) {
-            return next(new HttpError("fill all required fields", 400))
+        const { currentPassword, newPassword, confirmNewPassword } = req.body;
+
+        if (!currentPassword || !newPassword) {
+            return next(new HttpError("Fill all required fields", 400));
         }
 
-        const userToUpdate = await User.findById(req.user.id);
-        if(!userToUpdate) {
+        // Use req.params.id to find the user by ID
+        const userToUpdate = await User.findById(req.params.id);
+        
+        if (!userToUpdate) {
             return next(new HttpError("User not found", 404));
         }
 
@@ -146,21 +158,19 @@ const updateUser = async (req, res, next) => {
         }
 
         if (newPassword !== confirmNewPassword) {
-            return next(new HttpError("New password do not match", 400))
+            return next(new HttpError("New passwords do not match", 400));
         }
 
-        
         const hashedPassword = await bcrypt.hash(newPassword, 10); 
-        
         userToUpdate.password = hashedPassword;
         await userToUpdate.save();
 
-        
         res.status(200).json({ message: 'Password updated successfully' });
     } catch (error) {
         return next(new HttpError("Failed to update password", 500));
     }
 };
+
 
 // protected to prevent unauthorized users from making changes.
 const deleteUser = async (req, res, next) => {

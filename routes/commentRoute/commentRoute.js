@@ -1,29 +1,27 @@
+const {
+    createComment, editComment, deleteComment,
+} = require("../../controllers/commentController")
+const protectRoute = require("../../middlewares/authMiddleware")
 const express = require("express");
-const router = express.Router();
+const commentRouter = express.Router();
 
 // Create a new comment for a specific post
-router.post('/:postId', (req, res) => {
-    res.json({message: "create a new comment for a post"});
-});
+commentRouter.post('/:postId', protectRoute, createComment);
 
 // Get all comments for a specific post
-router.get('/:postId', (req, res) => {
+commentRouter.get('/:postId', (req, res) => {
     res.json({message: "get all comments for a post"});
 });
 
 // Get a specific comment for a post
-router.get('/:postId/:commentId', (req, res) => {
+commentRouter.get('/:postId/:commentId', (req, res) => {
     res.json({message: "get specific comment for a post"});
 });
 
 // Update a specific comment for a post
-router.put('/:postId/:commentId', (req, res) => {
-    res.json({message: "update specific comment for a post"});
-});
+commentRouter.put('/:postId/:commentId', protectRoute, editComment);
 
 // Delete a specific comment for a post
-router.delete('/:postId/:commentId', (req, res) => {
-    res.json({message: "delete specific comment for a post"});
-});
+commentRouter.delete('/:postId/:commentId', protectRoute, deleteComment);
 
-module.exports = router;
+module.exports = commentRouter;

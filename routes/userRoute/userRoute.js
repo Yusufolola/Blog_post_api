@@ -7,7 +7,7 @@ const userRouter = express.Router();
 const protectRoute = require("../../middlewares/authMiddleware")
 
 // Get all users
-userRouter.get('/',protectRoute, getAllusers);
+userRouter.get('/', getAllusers);
 
 // Get a single user by ID
 userRouter.get('/:userid', protectRoute, getUserById);

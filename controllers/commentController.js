@@ -37,3 +37,85 @@ const createComment = async (req, res, next) => {
         return next(new HttpError(error.message, 500)); 
     }
 };
+
+const editComment = async (req, res, next) => {
+    const { content } = req.body;
+    try {
+        // Find the post by its ID
+        const post = await Post.findById(req.params.postId);
+        if (!post) {
+            return next(new HttpError("Post not found", 404));
+        }
+
+        // Find the comment by id
+        const comment = await Comment.findById(req.params.commentId);
+        if (!comment) {
+            return next(new HttpError("Comment not found", 404));
+        }
+
+        // Check if the user making the request is the owner of the comment
+        if (comment.user.toString() !== req.user.id.toString()) {
+            return next(new HttpError("Unauthorized", 403));
+        }
+
+        // Update the comment's content
+        comment.content = content;
+
+        // Save the updated comment
+        await comment.save({ validateBeforeSave: true });
+
+        res.json({
+            status: "Comment successfully updated",
+            info: comment,
+        });
+
+    } catch (error) {
+        return next(new HttpError(error.message, 500));
+    }
+};
+
+const deleteComment = async (req, res, next) => {
+    try {
+        // Find the post by its ID
+        const post = await Post.findById(req.params.postId);
+        if (!post) {
+            return next(new HttpError("Post not found", 404));
+        }
+
+        // First find the comment to verify ownership
+        const comment = await Comment.findById(req.params.commentId);
+        if (!comment) {
+            return next(new HttpError("Comment not found", 404));
+        }
+
+        // Check if the user making the request is the owner of the comment
+        if (comment.user.toString() !== req.user.id.toString()) {
+            return next(new HttpError("Unauthorized", 403));
+        }
+
+        // Remove the comment reference from the post's comments array
+        post.comments = post.comments.filter(
+            (commentId) => commentId.toString() !== req.params.commentId
+        );
+
+        // Save the updated post
+        await post.save({ validateBeforeSave: true });
+
+        // Use findByIdAndDelete to delete the comment
+        await Comment.findByIdAndDelete(req.params.commentId);
+
+        res.json({
+            status: "Comment successfully deleted",
+        });
+
+    } catch (error) {
+        return next(new HttpError(error.message, 500));
+    }
+};
+
+
+
+
+module.exports = {
+    createComment, editComment, deleteComment,
+}
