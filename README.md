@@ -1,6 +1,9 @@
-# NodeJS and ExpressJs Blogs API
+,# NodeJS and ExpressJs Blogs API
 
 The Blogs API is a backend application that provides RESTful API endpoints for managing blog posts. It allows users to perform CRUD (Create, Read, Update, Delete) operations on users endpoints, post endpoints, categories and also comments. This API is designed to be used as a backend service for a blogging platform or any other application that requires blog post management.
+
+## Tech Stack
+Node, Express, Jwt, Mongodb,  Bcrypt 
 
 ## Table of Contents
 
@@ -24,6 +27,9 @@ The Blogs API is a backend application that provides RESTful API endpoints for m
 - Update an existing blog post, modify its content, or update its metadata.
 - Delete a blog post and its associated data from the system.
 - User authentication and authorization for protected endpoints.
+- Create comments
+- Edit comments
+- Delete comments 
 
 ## Getting Started
 
