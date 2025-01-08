@@ -82,7 +82,16 @@ The following API endpoints are available:
 - `DELETE /:categoryId`: Delete a category.
 - `GET /:categoryId`: Get a single category by Id
 - `GET /categories`: Get all categories
-- `POST /category` : Create category 
+- `POST /category` : Create category
+- `Post /:postId` : Create comment for a specific post
+- `Get /:postId` : Get all comments for single post by id
+- `put /:postId/:commentId`: Edit a comment
+- `Delete /:postId/:commentId`: Delete a comment
+- `Post /` : Create a post
+- `Get /` : Get all post
+- `put /:postId` : Edit a post
+- `Delete /:postId` Delete a post
+- 
 
 For detailed information about the request and response formats, see the API documentation or the source code.
 
