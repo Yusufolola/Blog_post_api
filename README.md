@@ -1,4 +1,4 @@
-# NodeJS Blogs API
+# NodeJS and ExpressJs Blogs API
 
 The Blogs API is a backend application that provides RESTful API endpoints for managing blog posts. It allows users to perform CRUD (Create, Read, Update, Delete) operations on users endpoints, post endpoints, categories and also comments. This API is designed to be used as a backend service for a blogging platform or any other application that requires blog post management.
 
@@ -91,6 +91,14 @@ The following API endpoints are available:
 - `Get /` : Get all post
 - `put /:postId` : Edit a post
 - `Delete /:postId` Delete a post
+- `Get /` : Get all users
+- `Get /:userid`: Get single user by Id
+- `put /:userid` : Edit a user info  by id
+- `Delete /:userid`: Delete a user by id
+- `Post /register` : Register new user
+- `Post /login` : login user
+- `Post /logout` : logout user
+- 
 - 
 
 For detailed information about the request and response formats, see the API documentation or the source code.
