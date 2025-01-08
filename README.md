@@ -39,7 +39,7 @@ Before running the application, ensure you have the following prerequisites:
 1. Clone the repository to your local machine:
 
 ```bash
-git clone https://github.com/
+git clone https://github.com/Yusufolola/Blog_post_api.git
 ```
 
 2. Navigate to the project directory:
