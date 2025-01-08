@@ -78,10 +78,11 @@ By default, the server will run on `http://localhost:3000`, but you can configur
 
 The following API endpoints are available:
 
-- `GET /blogs`: Get all blog posts.
-- `GET /blogs/:id`: Get a specific blog post by ID.
-- `POST /blog`: Create a new blog post.
-- `DELETE /delete-blog`: Delete a blog post.
+
+- `DELETE /:categoryId`: Delete a category.
+- `GET /:categoryId`: Get a single category by Id
+- `GET /categories`: Get all categories
+- `POST /category` : Create category 
 
 For detailed information about the request and response formats, see the API documentation or the source code.
 
