@@ -7,7 +7,7 @@ const postSchema = new mongoose.Schema({
         trim: true,
     },
     
-    description:{
+    content:{
         type: String,
         required: [true, "input a description"],
     },

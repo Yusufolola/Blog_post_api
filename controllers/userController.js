@@ -1,11 +1,13 @@
 const Jwt = require('jsonwebtoken');
 const path = require('path');
 const HttpError = require(path.resolve(__dirname, '../models/errorModel.js'));
-//const HttpError = require("../models/errorModel.js")
-console.log(HttpError);
 const User = require("../models/User/User")
-const bcrypt = require("bcryptjs")
-
+const bcrypt = require("bcryptjs");
+const { promisify } = require('util');
+const redis = require('redis');
+const client = redis.createClient({
+    url: process.env.REDIS_URL || 'redis://localhost:6379',
+});
 
 // protected only admin can access
 const getAllusers = async (req, res, next) => {
@@ -21,17 +23,22 @@ const getAllusers = async (req, res, next) => {
 
 //it should be protected so that only authorized users or the user themselves can view their data.
 const getUserById = async (req, res, next) => {
-    const {id} = req.params
+    const userId = req.params.userid; // Access userid directly from req.params
+
     try {
-        const user = await User.findById(id)
+        const user = await User.findById(userId); // Use the userId to find the user
+        if (!user) {
+            return next(new HttpError("User not found", 404));
+        }
+
         res.json({
-            status:"success",
-            data:user
-        })
+            status: "success",
+            data: user,
+        });
     } catch (error) {
-        return next(new HttpError(error.message))
+        return next(new HttpError(error.message, 500));
     }
-}
+};
 
 //unprotected
 const registerUser = async (req, res, next) => {
@@ -84,26 +91,66 @@ const registerUser = async (req, res, next) => {
 
 //unprotected
 
+
+
+const getAsync = promisify(client.get).bind(client);
+const incrAsync = promisify(client.incr).bind(client);
+const expireAsync = promisify(client.expire).bind(client);
+const delAsync = promisify(client.del).bind(client);
+
+const ensureRedisConnected = async () => {
+    if (!client.isOpen) {
+        await client.connect(); 
+    }
+};
+
+const incrementLoginAttempts = async (key) => {
+    await ensureRedisConnected(); // make sure client is connected before using Redis
+    const attempts = await client.incr(key); // Increment attempts
+    if (attempts === 1) {
+        await client.expire(key, LOCK_TIME); // Set expiry only if it's the first failed attempt
+    }
+};
+
+const MAX_ATTEMPTS = 3;
+const LOCK_TIME = 30 * 60
 const loginUser = async (req, res, next) => {
     try {
-        const {email, password} = req.body;
+        const { email, password } = req.body;
         if (!email || !password) {
             return next(new HttpError("Please input all fields", 422));
         }
 
         const newEmail = email.toLowerCase();
-        const user = await User.findOne({email: newEmail});
+
+        // Ensure Redis is connected before using it
+        await ensureRedisConnected();
+
+        // Check if the user has exceeded the max number of login attempts
+        const loginAttemptsKey = `login_attempts_${newEmail}`;
+        const attempts = await client.get(loginAttemptsKey);
+
+        if (attempts && attempts >= MAX_ATTEMPTS) {
+            return next(new HttpError("Too many failed login attempts, try again later", 429)); // 429 Too Many Requests
+        }
+
+        const user = await User.findOne({ email: newEmail });
         if (!user) {
+            await incrementLoginAttempts(loginAttemptsKey);
             return next(new HttpError("Invalid email or password", 422));
         }
 
         const comparePassword = await bcrypt.compare(password, user.password);
         if (!comparePassword) {
+            await incrementLoginAttempts(loginAttemptsKey);
             return next(new HttpError("Invalid email or password", 422));
         }
 
+        // Reset login attempts after a successful login
+        await client.del(loginAttemptsKey);
+
         // Add a dynamic issued at (iat) field to make the token unique
-        const {_id: id, name} = user;
+        const { _id: id, name } = user;
         const token = Jwt.sign(
             { id, name, iat: Math.floor(Date.now() / 1000) }, // Include the current timestamp as "iat"
             process.env.JWT_KEY,

@@ -5,8 +5,8 @@ const HttpError = require("../models/errorModel.js")
 
 
 const createPost = async (req, res, next) => {
-    const { title, description, category } = req.body;
-    if (!title || !description || !category ) {
+    const { title, content, category } = req.body;
+    if (!title || !content || !category ) {
         return next(new HttpError("All fields are required", 400));
     }
     try {
@@ -16,7 +16,7 @@ const createPost = async (req, res, next) => {
         }
         const newPost = await Post.create({
             title,
-            description,
+            content,
             author: author._id,
             category,
         })
@@ -30,6 +30,8 @@ const createPost = async (req, res, next) => {
             post: newPost,
         });
     } catch (err) {
+        console.error("Error creating post:", err.message);
+
         return next(new HttpError("Failed to create post, try again later", 500));
     }
 };
