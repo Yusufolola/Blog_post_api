@@ -9,7 +9,8 @@ const client = redis.createClient({
     url: process.env.REDIS_URL || 'redis://localhost:6379',
 });
 
-// protected only admin can access
+
+
 const getAllusers = async (req, res, next) => {
     try {
         const users = await User.find().select("-password");
@@ -23,10 +24,10 @@ const getAllusers = async (req, res, next) => {
 
 //it should be protected so that only authorized users or the user themselves can view their data.
 const getUserById = async (req, res, next) => {
-    const userId = req.params.userid; // Access userid directly from req.params
+    const userId = req.params.userid; 
 
     try {
-        const user = await User.findById(userId); // Use the userId to find the user
+        const user = await User.findById(userId); 
         if (!user) {
             return next(new HttpError("User not found", 404));
         }
@@ -105,69 +106,86 @@ const ensureRedisConnected = async () => {
 };
 
 const incrementLoginAttempts = async (key) => {
-    await ensureRedisConnected(); // make sure client is connected before using Redis
-    const attempts = await client.incr(key); // Increment attempts
+    await ensureRedisConnected(); 
+    const attempts = await client.incr(key); 
     if (attempts === 1) {
-        await client.expire(key, LOCK_TIME); // Set expiry only if it's the first failed attempt
+        await client.expire(key, LOCK_TIME); 
     }
 };
 
 const MAX_ATTEMPTS = 3;
-const LOCK_TIME = 30 * 60
-const loginUser = async (req, res, next) => {
-    try {
-        const { email, password } = req.body;
-        if (!email || !password) {
-            return next(new HttpError("Please input all fields", 422));
-        }
-
-        const newEmail = email.toLowerCase();
-
-        // Ensure Redis is connected before using it
-        await ensureRedisConnected();
-
-        // Check if the user has exceeded the max number of login attempts
-        const loginAttemptsKey = `login_attempts_${newEmail}`;
-        const attempts = await client.get(loginAttemptsKey);
-
-        if (attempts && attempts >= MAX_ATTEMPTS) {
-            return next(new HttpError("Too many failed login attempts, try again later", 429)); // 429 Too Many Requests
-        }
-
-        const user = await User.findOne({ email: newEmail });
-        if (!user) {
-            await incrementLoginAttempts(loginAttemptsKey);
-            return next(new HttpError("Invalid email or password", 422));
-        }
-
-        const comparePassword = await bcrypt.compare(password, user.password);
-        if (!comparePassword) {
-            await incrementLoginAttempts(loginAttemptsKey);
-            return next(new HttpError("Invalid email or password", 422));
-        }
-
-        // Reset login attempts after a successful login
-        await client.del(loginAttemptsKey);
-
-        // Add a dynamic issued at (iat) field to make the token unique
-        const { _id: id, name } = user;
-        const token = Jwt.sign(
-            { id, name, iat: Math.floor(Date.now() / 1000) }, // Include the current timestamp as "iat"
-            process.env.JWT_KEY,
-            { expiresIn: "1d" }
-        );
-
-        res.cookie('token', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            maxAge: 24 * 60 * 60 * 1000 // 1 day
-        }).status(200).json({ message: 'Login successful', name, id, token });
-    } catch (error) {
-        console.error(error);
-        return next(new HttpError("Login failed, please verify credentials", 422));
+const LOCK_TIME = 2 * 60
+const loginUser = async (req, res, next) => {try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+        return next(new HttpError("Please input all fields", 422));
     }
-};
 
+    const newEmail = email.toLowerCase();
+
+    // Ensure Redis is connected before using it
+    await ensureRedisConnected();
+
+    const loginAttemptsKey = `login_attempts_${newEmail}`;
+
+    
+    const attempts = await client.get(loginAttemptsKey);
+    const expirationTime = await client.ttl(loginAttemptsKey); 
+    if (attempts && attempts >= MAX_ATTEMPTS && expirationTime > 0) {
+        
+        return next(new HttpError("Too many failed login attempts, try again later", 429));
+    }
+
+    
+    if (expirationTime <= 0) {
+        await client.del(loginAttemptsKey); 
+    }
+
+    const user = await User.findOne({ email: newEmail });
+    if (!user) {
+        
+        await incrementLoginAttempts(loginAttemptsKey);
+        return next(new HttpError("Invalid email or password", 422));
+    }
+
+    const comparePassword = await bcrypt.compare(password, user.password);
+    if (!comparePassword) {
+        
+        await incrementLoginAttempts(loginAttemptsKey);
+        return next(new HttpError("Invalid email or password", 422));
+    }
+
+
+    await client.del(loginAttemptsKey); 
+
+    
+    const { _id: id, name } = user;
+    const token = Jwt.sign(
+        { id, name, iat: Math.floor(Date.now() / 1000) },
+        process.env.JWT_KEY,
+        { expiresIn: "1d" }
+    );
+
+    res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 24 * 60 * 60 * 1000 // 1 day
+    }).status(200).json({ message: 'Login successful', name, id, token });
+
+} catch (error) {
+    console.error(error);
+    return next(new HttpError("Login failed, please verify credentials", 422));
+}
+
+
+async function incrementLoginAttempts(loginAttemptsKey) {
+    const attempts = await client.incr(loginAttemptsKey); 
+    if (attempts === 1) {
+    
+        await client.expire(loginAttemptsKey, 30 * 60); 
+    }
+    return attempts;
+}
 
 const logoutUser = (req, res, next) => {
     try {
