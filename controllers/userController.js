@@ -115,7 +115,8 @@ const incrementLoginAttempts = async (key) => {
 
 const MAX_ATTEMPTS = 3;
 const LOCK_TIME = 2 * 60
-const loginUser = async (req, res, next) => {try {
+const loginUser = async (req, res, next) => {
+    try {
     const { email, password } = req.body;
     if (!email || !password) {
         return next(new HttpError("Please input all fields", 422));
@@ -176,6 +177,7 @@ const loginUser = async (req, res, next) => {try {
     console.error(error);
     return next(new HttpError("Login failed, please verify credentials", 422));
 }
+};
 
 
 async function incrementLoginAttempts(loginAttemptsKey) {
