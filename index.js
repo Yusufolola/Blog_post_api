@@ -8,8 +8,13 @@ const postRoute = require("./routes/postRoute/postRoute.js")
 const categoryRoute = require("./routes/categoryRoute/categoryRoute.js")
 const { errorMiddleware,notfound  } = require("./middlewares/errorMiddleware")
 const cookieParser = require("cookie-parser");
+const swaggerjsdoc = require("./swaggerConfig.js");
+const swaggerUi = require("swagger-ui-express");
+
+
 const app = express();
 
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerjsdoc));
 app.use(cors({
     origin: 'http://localhost:8000', 
     credentials: true, 
@@ -24,7 +29,12 @@ app.use("/api/v1/posts", postRoute);
 
 app.use(notfound);
 app.use(errorMiddleware);
-
-
 const PORT = process.env.PORT || 9000;
-app.listen(PORT, console.log(`server listening on port ${PORT}`))
+
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+  });
+
+
+//const PORT = process.env.PORT || 9000;
+//app.listen(PORT, console.log(`server listening on port ${PORT}`))

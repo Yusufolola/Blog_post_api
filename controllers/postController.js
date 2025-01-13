@@ -6,6 +6,8 @@ const HttpError = require("../models/errorModel.js")
 
 const createPost = async (req, res, next) => {
     const { title, content, category } = req.body;
+    console.log(req.body);
+
     if (!title || !content || !category ) {
         return next(new HttpError("All fields are required", 400));
     }
@@ -47,8 +49,8 @@ const getAllPosts = async (req, res, next) => {
             info: posts
         })
     } catch (error) {
-        
-    }res.json(error.message)
+        res.json(error.message)
+    }
 };
 
 
@@ -71,8 +73,11 @@ const getAllPosts = async (req, res, next) => {
 const editPost = async (req, res, next) => {
     const { title, description , category} = req.body
     try {
-        const postToDelete = await Post.findById(req.params.id);
-        if (post.user.toString() !== req.user.id.toString()) {
+        const postToUpdate = await Post.findById(req.params.postId);
+        if (!postToUpdate) {
+            return res.status(404).json({ message: "Post not found" });
+        }
+        if (postToUpdate.author.toString() !== req.user.id.toString()) {
             return next(HttpError("unauthorized", 403));
         }
         await Post.findByIdAndUpdate(req.params.id, {
@@ -87,15 +92,15 @@ const editPost = async (req, res, next) => {
             info: "post updated successfully",
         })
     } catch (error) {
-        res.json(error.message);
+        res.status(500).json({info:error.message});
     }
 }
 
 
 const deletePost = async (req, res, next) => {
     try {
-        const postToDelete = await Post.findById(req.params.id);
-        if (post.user.toString() !== req.user.id.toString()) {
+        const postToDelete = await Post.findById(req.params.postId);
+        if (postToDelete.author.toString() !== req.user.id.toString()) {
             return next(HttpError("unauthorized", 403));
         }
         await Post.findByIdAndDelete(req.params.id);

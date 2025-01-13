@@ -16,10 +16,10 @@ const postSchema = new mongoose.Schema({
         ref: "Category",
         required:[true, "choose a category"],
     },
-    comments:{
+    comments:[{
         type:mongoose.Schema.Types.ObjectId,
         ref: "Comment",
-    },
+    }],
     views:[{
         type:mongoose.Schema.Types.ObjectId,
         ref:"User",

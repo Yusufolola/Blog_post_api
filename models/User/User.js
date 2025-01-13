@@ -49,6 +49,11 @@ const userSchema = new mongoose.Schema({
         type:mongoose.Schema.Types.ObjectId,
         ref:"User"
     }],
+    comments: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Comment",
+        default: [],  // Ensures it's always initialized as an array
+    }],
     posts:[{
         type: mongoose.Schema.Types.ObjectId,
         ref:"Post",

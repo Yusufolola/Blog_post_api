@@ -6,7 +6,7 @@ const User = require("../models/User/User");
 const createComment = async (req, res, next) => {
     const { content } = req.body; 
     try {
-        const post = await Post.findById(req.params.id);
+        const post = await Post.findById(req.params.postId);
         if (!post) {
             return next(new HttpError("Post not found", 404));
         }
@@ -39,7 +39,14 @@ const createComment = async (req, res, next) => {
 };
 
 const editComment = async (req, res, next) => {
+    console.log(req.body);
     const { content } = req.body;
+
+    // Validate that content is provided in the request
+    if (!content || content.trim() === "") {
+        return next(new HttpError("Content cannot be empty", 400));
+    }
+
     try {
         // Find the post by its ID
         const post = await Post.findById(req.params.postId);
@@ -47,10 +54,15 @@ const editComment = async (req, res, next) => {
             return next(new HttpError("Post not found", 404));
         }
 
-        // Find the comment by id
+        // Find the comment by its ID
         const comment = await Comment.findById(req.params.commentId);
         if (!comment) {
             return next(new HttpError("Comment not found", 404));
+        }
+
+        // Check if the comment belongs to the found post
+        if (comment.post.toString() !== req.params.postId) {
+            return next(new HttpError("Comment does not belong to this post", 400));
         }
 
         // Check if the user making the request is the owner of the comment
@@ -62,7 +74,7 @@ const editComment = async (req, res, next) => {
         comment.content = content;
 
         // Save the updated comment
-        await comment.save({ validateBeforeSave: true });
+        await comment.save();
 
         res.json({
             status: "Comment successfully updated",
@@ -73,6 +85,7 @@ const editComment = async (req, res, next) => {
         return next(new HttpError(error.message, 500));
     }
 };
+
 
 const deleteComment = async (req, res, next) => {
     try {
