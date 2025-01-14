@@ -180,14 +180,6 @@ const loginUser = async (req, res, next) => {
 };
 
 
-async function incrementLoginAttempts(loginAttemptsKey) {
-    const attempts = await client.incr(loginAttemptsKey); 
-    if (attempts === 1) {
-    
-        await client.expire(loginAttemptsKey, 30 * 60); 
-    }
-    return attempts;
-}
 
 const logoutUser = (req, res, next) => {
     try {

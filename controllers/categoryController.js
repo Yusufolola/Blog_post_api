@@ -28,7 +28,7 @@ const getAllCategories = async (req, res, next) => {
 
 const getSingleCategory = async (req, res, next) => {
     try {
-        const category = await Category.findById(req.params.id);
+        const category = await Category.findById(req.params.categoryId);
         res.json({status: "success",
             info: category,
         })
